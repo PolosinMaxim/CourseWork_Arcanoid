@@ -9,6 +9,7 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+lightBLUE = (128, 128, 255)
 back_image_filename = '01.jpg'
 WIDTH = 800  # ширина игрового окна
 HEIGHT = 600 # высота игрового окна
@@ -133,8 +134,10 @@ class Game():
                 self.ball.x_speed *= -1 #right
                 result = True
             if result:
-                self.objects.remove(brick)
-                self.bricks.remove(brick)
+                if brick.tipe == 0:
+                    self.objects.remove(brick)
+                    self.bricks.remove(brick)
+                else: brick.tipe -= 1
             #проверяем результат
             #if result == 'top' or result == 'bottom': self.ball.y_speed *= -1
             #if result == 'left' or result == 'right': self.ball.x_speed *= -1
@@ -185,13 +188,14 @@ class Bita():
 
 class Brick():
     def __init__(self):
-        self.color = random.choice([RED, BLUE, WHITE])
+        self.tipe = random.randrange(3)
+        #self.color = [RED, BLUE, WHITE][self.tipe]
         self.x = None
         self.y = None
     def update(self):
         pass
     def draw(self,screen):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, brick_width, brick_height))
+        pygame.draw.rect(screen, [WHITE, lightBLUE, RED][self.tipe], (self.x, self.y, brick_width, brick_height))
 
 
 #def main():
