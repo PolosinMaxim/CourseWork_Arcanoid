@@ -50,7 +50,7 @@ class Game():
     def create_bricks(self):
         for i in range(15): #собственно кирпичи
             for j in range(10):
-                if random.randrange(10) > 2: continue
+                #if random.randrange(10) > 2: continue
                 brick = Brick()
                 brick.x = i * (brick_width + brick_border)
                 brick.y = brick_field_start + j * (brick_height + brick_border)
@@ -106,7 +106,7 @@ class Game():
         #bx = self.ball.ball_x #+ self.ball.true_rad
         #by = self.ball.ball_y #+ self.ball.true_rad
         for brick in self.bricks:
-            #result = None
+            result = False
             coll_vert = self.ball.ball_x + self.ball.ball_radius >= brick.x and self.ball.ball_x - self.ball.ball_radius <= brick.x + brick_width
             coll_horz = self.ball.ball_y + self.ball.ball_radius >= brick.y and self.ball.ball_y - self.ball.ball_radius <= brick.y + brick_height
             brad = self.ball.ball_radius + abs(self.ball.x_speed)
@@ -116,18 +116,25 @@ class Game():
                 delta = self.ball.ball_y + self.ball.ball_radius - brick.y
                 if delta > 0: self.ball.ball_y -= delta
                 self.ball.y_speed *= -1 #top
+                result = True
             elif self.ball.y_speed < 0 and coll_vert and self.ball.ball_y - brad > brick.y and self.ball.ball_y - brad < brick.y + brick_height:
                 delta = brick.y + brick_height - self.ball.ball_y - self.ball.ball_radius
                 if delta > 0: self.ball.ball_y += delta
                 self.ball.y_speed *= -1 #bottom
+                result = True
             elif self.ball.x_speed > 0 and coll_horz and self.ball.ball_x + brad > brick.x and self.ball.ball_x + brad < brick.x + brick_width:
                 delta = self.ball.ball_x + self.ball.ball_radius - brick.x
                 if delta > 0: self.ball.ball_x -= delta
                 self.ball.x_speed *= -1 #left
+                result = True
             elif self.ball.x_speed < 0 and coll_horz and self.ball.ball_x - brad > brick.x and self.ball.ball_x - brad < brick.x + brick_width:
                 delta = brick.x + brick_width - self.ball.ball_x - self.ball.ball_radius
                 if delta > 0: self.ball.ball_x += delta
                 self.ball.x_speed *= -1 #right
+                result = True
+            if result:
+                self.objects.remove(brick)
+                self.bricks.remove(brick)
             #проверяем результат
             #if result == 'top' or result == 'bottom': self.ball.y_speed *= -1
             #if result == 'left' or result == 'right': self.ball.x_speed *= -1
