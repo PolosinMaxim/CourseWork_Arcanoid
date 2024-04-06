@@ -15,10 +15,8 @@ back_image_filename = '01.jpg'
 WIDTH = 1280  # ширина игрового окна
 HEIGHT = 720 # высота игрового окна
 FPS = 60 # частота кадров в секунду
-brick_width =  WIDTH // 15 - 2 #50 #WIDTH // 15 - 2 - 16 штук
-brick_width2 = brick_width * 2
-brick_height =  HEIGHT // 20 - 2 #28 #HEIGHT // 20 - 2
-brick_height2 = brick_height * 2
+brick_width =  WIDTH // 15 - 2 #16 штук
+brick_height =  HEIGHT // 20 - 2
 brick_field_start = HEIGHT // 6
 #brick_field_end = 400
 brick_border = 2
@@ -36,9 +34,9 @@ class Game():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     def __init__(self):
-# создаем игру и окно
+        # создаем игру и окно
         pygame.init()
-#pygame.mixer.init()  # для звука
+        #pygame.mixer.init()  # для звука
         pygame.display.set_caption("Parkanoid")
         self.objects = []
         self.bita = None
@@ -54,7 +52,6 @@ class Game():
         self.surprises.clear()
         self.create_bricks()
         if self.ball: self.objects.remove(self.ball)
-
         self.create_ball()
         self.level+=1
     def create_bita(self):
@@ -66,9 +63,8 @@ class Game():
         self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
         self.objects.append(self.ball)
     def create_bricks(self):
-        for i in range(15): #15): #собственно кирпичи
-            for j in range(8): #10
-                #if random.randrange(10) > 2: continue
+        for i in range(15): #собственно кирпичи
+            for j in range(8):
                 brick = Brick()
                 brick.x = i * (brick_width + brick_border)
                 brick.y = brick_field_start + j * (brick_height + brick_border)
@@ -128,21 +124,14 @@ class Game():
             ob.draw(self.screen)
     def events(self):
         for event in pygame.event.get(): #можно было бы сделать match case, но более старые версии это не поддерживают
-            #match event.type:
-                #case pygame.QUIT:
-                #case pygame.KEYDOWN:
-                    #match event.key:
-                #case pygame.KEYUP:
             if event.type == pygame.QUIT:
                 running = False
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    #self.bita.bita_x -= 10
                     self.bita.toleft = True
                 elif event.key == pygame.K_RIGHT:
-                    #self.bita.bita_x += 10
                     self.bita.toright = True
                 elif event.key == pygame.K_SPACE:
                     self.ball.attached = False
@@ -166,7 +155,6 @@ class Game():
         if self.ball.ball_y > self.bita.bita_y - self.ball.ball_radius and self.ball.ball_x >= self.bita.bita_x and self.ball.ball_x < self.bita.bita_x + self.bita.bita_width:
             if self.ball.ball_y - self.ball.ball_radius > self.bita.bita_y:
                 lost = True
-                #lives -= 1
             else:
                 self.ball.y_speed *= -1
                 self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
@@ -176,7 +164,6 @@ class Game():
             lost = True
         if lost:
             self.lives -= 1
-            print("Lives:", self.lives)
             self.bita.reset()
             if self.lives < 1: self.game_over = True
             else:
@@ -185,17 +172,13 @@ class Game():
                 self.surprises = []
                 self.create_ball()
     def check_bricks(self):
-        #bx = self.ball.ball_x #+ self.ball.true_rad
-        #by = self.ball.ball_y #+ self.ball.true_rad
         for brick in self.bricks:
             result = False
-            if abs(brick.x - self.ball.ball_x) > brick_width2: continue
-            if abs(brick.y - self.ball.ball_y) > brick_height2: continue
+            if abs(brick.x - self.ball.ball_x) > brick_width * 2: continue
+            if abs(brick.y - self.ball.ball_y) > brick_height * 2: continue
             coll_vert = self.ball.ball_x + self.ball.ball_radius >= brick.x and self.ball.ball_x - self.ball.ball_radius <= brick.x + brick_width
             coll_horz = self.ball.ball_y + self.ball.ball_radius >= brick.y and self.ball.ball_y - self.ball.ball_radius <= brick.y + brick_height
             brad = self.ball.ball_radius + abs(self.ball.x_speed)
-            #при верт. коллизии bx не так важен, убрали в отдельную переменную
-            #так же и с by при коллизии
             if self.ball.y_speed > 0 and coll_vert and self.ball.ball_y + brad > brick.y and self.ball.ball_y + brad < brick.y + brick_height:
                 delta = self.ball.ball_y + self.ball.ball_radius - brick.y
                 if delta > 0: self.ball.ball_y -= delta
@@ -221,38 +204,27 @@ class Game():
                     self.objects.remove(brick)
                     self.bricks.remove(brick)
                     self.scores += 1
-                    print("Scores:", self.scores)
                     self.create_surprise(self.ball.ball_x, self.ball.ball_y)
                 else: brick.tipe -= 1
                 if len(self.bricks) ==0: self.newlevel()
-            #проверяем результат
-            #if result == 'top' or result == 'bottom': self.ball.y_speed *= -1
-            #if result == 'left' or result == 'right': self.ball.x_speed *= -1
     def check_surprises(self):
         for surp in self.surprises:
             if surp.y >= self.bita.bita_y and surp.y < self.bita.bita_y + self.bita.bita_height and surp.x <= self.bita.bita_x + self.bita.bita_width and surp.x + surp.surp_width >= self.bita.bita_x: #surp.x >= self.bita.bita_x and surp.x =< self.bita.bita_x + self.bita.bita_width:
                 if surp.tipe == 0: #доп. жизнь
                     self.lives += 1
-                    print("Lives:", self.lives)
-                elif surp.tipe == 1: #and self.bita.length_mode < 2: #расширяет биту
-                    #self.bita.length_mode += 1
-                    #print(["Короткая", "Обычная", "Длинная"][self.bita.length_mode])
+                elif surp.tipe == 1: #расширяет биту
                     self.bita.bita_width += brick_width // 2
                     self.bita.bita_width = min(self.bita.bita_width, max_bita_width)
                     if self.bita.bita_width != max_bita_width: self.bita.bita_x -= brick_width // 4
-                    print("Ширина:", self.bita.bita_width)
                     if self.bita.bita_x > WIDTH - self.bita.bita_width: self.bita.bita_x = WIDTH - self.bita.bita_width - 1 #доп. проверка на случай, если вылезает за границы
                     elif self.bita.bita_x < 0: self.bita.bita_x = 1
-                elif surp.tipe == 2: #and self.bita.length_mode > 0: #сужает биту
-                    #self.bita.length_mode -= 1
-                    #print(["Короткая", "Обычная", "Длинная"][self.bita.length_mode])
+                elif surp.tipe == 2: #сужает биту
                     self.bita.bita_width -= brick_width // 2
                     self.bita.bita_width = max(self.bita.bita_width, min_bita_width)
                     if self.bita.bita_width != min_bita_width: self.bita.bita_x += brick_width // 4
-                    print("Ширина:", self.bita.bita_width)
                 self.objects.remove(surp)
                 self.surprises.remove(surp)
-            elif surp.y > (HEIGHT + self.bita.bita_y) // 2: #self.bita.bita_y + self.bita.bita_height:
+            elif surp.y > (HEIGHT + self.bita.bita_y) // 2:
                 self.objects.remove(surp)
                 self.surprises.remove(surp)
 
@@ -260,21 +232,16 @@ class Ball():
     ball_radius = brick_width // 5
     color = RED
     attached = True # Если True, то прикреплён к бите
-    #true_rad = ball_radius #// 2
     def __init__(self):
         ball_x = None   # Координаты центра мяча
         ball_y = None
-        self.x_speed = self.ball_radius / 5 #2.0  # Текущая скорость по x
+        self.x_speed = self.ball_radius / 5   # Текущая скорость по x
         self.y_speed = self.ball_radius / -5  # Текущая скорость по y
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (self.ball_x, self.ball_y), self.ball_radius)
     def update(self):
-        #self.move()
-    #def move(self):
         if self.attached:
             pass
-            #self.ball_x = bita_x + bita_width / 2
-            #self.ball_y = bita_y - ball.ball_radius
         else:
             self.ball_x += self.x_speed
             self.ball_y += self.y_speed
@@ -282,8 +249,6 @@ class Ball():
 class Bita():
     bita_y = HEIGHT - 100
     bita_height = brick_height
-    #length_mode = 1 #ширина биты в зависимости от сюрпризов:
-    #0 - короткая, 1 - обычная, 2 - длинная
     speed = brick_height // 4
     def __init__(self):
         self.bita_x = WIDTH // 2 - brick_width
@@ -297,11 +262,9 @@ class Bita():
         self.bita_width = brick_width * 2
     def update(self):
         if self.toleft:
-            #other actions?
             if self.bita_x > 0:
                 self.bita_x -= self.speed
         if self.toright:
-            #other actions?
             if self.bita_x < WIDTH - self.bita_width:
                 self.bita_x += self.speed
     def draw(self,screen):
@@ -309,12 +272,10 @@ class Bita():
 
 class Brick():
     def __init__(self):
-        self.tipe = 0 #random.randrange(3)
+        self.tipe = 0
         rr = random.randrange(10)
         if rr<2: self.tipe = 2
         elif rr<5: self.tipe = 1
-        #else: self.tipe = 0
-        #self.color = [RED, BLUE, WHITE][self.tipe]
         self.x = None
         self.y = None
     def update(self):
@@ -375,3 +336,4 @@ if __name__ == '__main__':
 #https://younglinux.info/pygame/draw
 #https://riptutorial.com/pygame/example/18046/event-loop
 #https://cpp-python-nsu.inp.nsk.su/textbook/sec5/ch1
+#https://ru.stackoverflow.com/questions/1357843/%D0%9A%D0%B0%D0%BA-%D1%81%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C-%D1%87%D1%82%D0%BE%D0%B1%D1%8B-%D0%B8%D0%B7%D0%BE%D0%B1%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%BB%D0%BE%D1%81%D1%8C-%D0%BF%D0%BE%D0%B4-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%80-%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0
