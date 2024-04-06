@@ -12,22 +12,23 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 lightBLUE = (128, 128, 255)
 back_image_filename = '01.jpg'
-WIDTH = 800  # ширина игрового окна
-HEIGHT = 600 # высота игрового окна
+WIDTH = 1280  # ширина игрового окна
+HEIGHT = 720 # высота игрового окна
 FPS = 60 # частота кадров в секунду
-brick_width =  50 #WIDTH // 15 - 2 - 16 штук
+brick_width =  WIDTH // 15 - 2 #50 #WIDTH // 15 - 2 - 16 штук
 brick_width2 = brick_width * 2
-brick_height =  28 #HEIGHT // 20 - 2
+brick_height =  HEIGHT // 20 - 2 #28 #HEIGHT // 20 - 2
 brick_height2 = brick_height * 2
-brick_field_start = 100
-brick_field_end = 400
+brick_field_start = HEIGHT // 6
+#brick_field_end = 400
 brick_border = 2
-min_bita_width = 25
-max_bita_width = 200
+min_bita_width = brick_width // 2 #25
+max_bita_width = brick_width * 4
 
 
 class Game():
     background_image = pygame.image.load(back_image_filename)
+    background_image = pygame.transform.scale(background_image,(WIDTH, HEIGHT))
     running = True
     game_over = False
     scores = 0
@@ -66,7 +67,7 @@ class Game():
         self.objects.append(self.ball)
     def create_bricks(self):
         for i in range(15): #15): #собственно кирпичи
-            for j in range(10): #10
+            for j in range(8): #10
                 #if random.randrange(10) > 2: continue
                 brick = Brick()
                 brick.x = i * (brick_width + brick_border)
@@ -88,28 +89,40 @@ class Game():
                                       lambda: f'SCORE: {self.scores}',
                                       GREEN,
                                       'Arial',
-                                      20)
+                                      brick_height)
         self.objects.append(self.score_label)
-        self.lives_label = TextObject(WIDTH-100,
+        self.lives_label = TextObject(WIDTH * 7 // 8,
                                       5,
                                       lambda: f'LIVES: {self.lives}',
                                       GREEN,
                                       'Arial',
-                                      20)
+                                      brick_height)
         self.objects.append(self.lives_label)
         self.level_label = TextObject(WIDTH//2,
                                       5,
                                       lambda: f'LEVEL: {self.level}',
                                       GREEN,
                                       'Arial',
-                                      20)
+                                      brick_height)
         self.objects.append(self.level_label)
     def update(self):
-        for ob in self.objects:
-            ob.update()
-        self.check_borders()
-        self.check_bricks()
-        self.check_surprises()
+        if self.game_over:
+            self.gameover_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 2 // 3,
+                                      lambda: f'GAME OVER',
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+            self.objects.append(self.gameover_label)
+        else:
+            for ob in self.objects:
+                ob.update()
+            self.check_borders()
+            self.check_bricks()
+            self.check_surprises()
+            if self.ball.attached:
+                self.ball.ball_x = self.bita.bita_x + self.bita.bita_width / 2
+                self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
     def draw(self):
         for ob in self.objects:
             ob.draw(self.screen)
@@ -137,7 +150,7 @@ class Game():
                 self.bita.toleft = False
                 self.bita.toright = False
     def run(self):
-        while not self.game_over:
+        while True:
             self.screen.blit(self.background_image, (0, 0))
             self.events()
             self.update()
@@ -244,15 +257,15 @@ class Game():
                 self.surprises.remove(surp)
 
 class Ball():
-    ball_radius = 10
+    ball_radius = brick_width // 5
     color = RED
     attached = True # Если True, то прикреплён к бите
     #true_rad = ball_radius #// 2
     def __init__(self):
         ball_x = None   # Координаты центра мяча
         ball_y = None
-        self.x_speed = 2.0  # Текущая скорость по x
-        self.y_speed = -2.0  # Текущая скорость по y
+        self.x_speed = self.ball_radius / 5 #2.0  # Текущая скорость по x
+        self.y_speed = self.ball_radius / -5  # Текущая скорость по y
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (self.ball_x, self.ball_y), self.ball_radius)
     def update(self):
@@ -271,14 +284,14 @@ class Bita():
     bita_height = brick_height
     #length_mode = 1 #ширина биты в зависимости от сюрпризов:
     #0 - короткая, 1 - обычная, 2 - длинная
-    speed = 6
+    speed = brick_height // 4
     def __init__(self):
-        self.bita_x = 300
+        self.bita_x = WIDTH // 2 - brick_width
         self.toleft = False
         self.toright = False
         self.bita_width = brick_width * 2
     def reset(self):
-        self.bita_x = 300
+        self.bita_x = WIDTH // 2 - brick_width
         self.toleft = False
         self.toright = False
         self.bita_width = brick_width * 2
@@ -317,7 +330,7 @@ class Surprises():
         self.surp_width = 0
     def draw(self, screen):
         if self.tipe == 0:
-            self.surp_width = 7
+            self.surp_width = brick_height // 4
             pygame.draw.circle(screen, lightRED, (self.x, self.y), self.surp_width) #доп. жизнь
         elif self.tipe == 1:
             self.surp_width = brick_width
