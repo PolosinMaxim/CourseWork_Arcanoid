@@ -29,7 +29,7 @@ name_limit = 12
 class Game():
     background_image = pygame.image.load(back_image_filename)
     background_image = pygame.transform.scale(background_image,(WIDTH, HEIGHT))
-    running = True
+    paused = False
     game_over = False
     need_input = True
     scores = 0
@@ -56,7 +56,7 @@ class Game():
         self.create_bricks()
         if self.ball: self.objects.remove(self.ball)
         self.create_ball()
-        self.level+=1
+        self.level += 1
     def create_bita(self):
         self.bita = Bita()
         self.objects.append(self.bita)
@@ -104,6 +104,12 @@ class Game():
                                       'Arial',
                                       brick_height)
         self.objects.append(self.level_label)
+        self.pause_label = TextObject(WIDTH // 2 - int(brick_width * 2.5),
+                                      HEIGHT * 11 // 18,
+                                      lambda: f'PAUSED, press SPACE to continue',
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
     def update(self):
         if self.game_over:
             self.gameover_label = TextObject(WIDTH // 2 - brick_width,
@@ -114,43 +120,47 @@ class Game():
                                       brick_height)
             self.objects.append(self.gameover_label)
             if self.need_input:
-                open("BestRecords.txt", "a").write(input("Ваше имя? ")[:name_limit] + chr(9) + str(self.scores) + chr(10))
                 self.need_input = False
                 player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
-                #print(player_list)
-                for i in range(len(player_list) - 1):
-                    for j in range(i + 1, len(player_list)):
-                        if int(player_list[j][-1][:-2]) > int(player_list[i][-1][:-2]):
-                            c = player_list[j]
-                            player_list[j] = player_list[i]
-                            player_list[i] = c
-                #выдумать что-то оптимальнее, а то len(player_list)! обходов - это много
+                if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
+                    open("BestRecords.txt", "a").write(input("Ваше имя? ")[:name_limit] + chr(9) + str(self.scores) + chr(10))
+                    player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
+                    for i in range(len(player_list) - 1):
+                        for j in range(i + 1, len(player_list)):
+                            #print(player_list[j][-1][:-1], player_list[i][-1][:-1])
+                            if int(player_list[j][-1][:-1]) > int(player_list[i][-1][:-1]):
+                                c = player_list[j]
+                                player_list[j] = player_list[i]
+                                player_list[i] = c
+                    #можно выдумать что-то оптимальнее, а то len(player_list)! обходов - это много
+                    newfile = open("BestRecords.txt", "w") #чтобы в цикле файл каждый раз не стирался
+                    for i in player_list: newfile.write(chr(9).join(i))
                 print(player_list)
-                newfile = open("BestRecords.txt", "w")
-                for i in player_list: newfile.write(chr(9).join(i))
                 #player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                 #print(player_list)
                 self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
                                       HEIGHT * 3 // 5,
-                                      lambda: "   ".join(player_list[0]),
+                                      lambda: player_list[0][0] + "   " + player_list[0][1][:-1],#"   ".join(player_list[0]),
                                       GREEN,
                                       'Arial',
                                       brick_height)
                 self.objects.append(self.firstbest_label)
-                self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
+                if len(player_list) >= 2:
+                    self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
                                       HEIGHT * 7 // 10,
-                                      lambda: "   ".join(player_list[1]),
+                                      lambda: player_list[1][0] + "   " + player_list[1][1][:-1],#"   ".join(player_list[1]),
                                       GREEN,
                                       'Arial',
                                       brick_height)
-                self.objects.append(self.secondbest_label)
-                self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
+                    self.objects.append(self.secondbest_label)
+                if len(player_list) >= 3:
+                    self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
                                       HEIGHT * 4 // 5,
-                                      lambda: "   ".join(player_list[2]),
+                                      lambda: player_list[2][0] + "   " + player_list[2][1][:-1],#"   ".join(player_list[2]),
                                       GREEN,
                                       'Arial',
                                       brick_height)
-                self.objects.append(self.thirdbest_label)
+                    self.objects.append(self.thirdbest_label)
         else:
             for ob in self.objects:
                 ob.update()
@@ -166,7 +176,7 @@ class Game():
     def events(self):
         for event in pygame.event.get(): #можно было бы сделать match case, но более старые версии это не поддерживают
             if event.type == pygame.QUIT:
-                self.running = False
+                #self.running = False
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -176,6 +186,13 @@ class Game():
                     self.bita.toright = True
                 elif event.key == pygame.K_SPACE:
                     self.ball.attached = False
+                    if self.paused:
+                        self.paused = False
+                        self.objects.remove(self.pause_label)
+                elif event.key == pygame.K_ESCAPE:
+                    if not self.paused:
+                        self.paused = True
+                        self.objects.append(self.pause_label)
             elif event.type == pygame.KEYUP:
                 self.bita.toleft = False
                 self.bita.toright = False
@@ -183,7 +200,7 @@ class Game():
         while True:
             self.screen.blit(self.background_image, (0, 0))
             self.events()
-            self.update()
+            if not self.paused: self.update()
             self.draw()
             pygame.display.update()
             self.clock.tick(FPS)
@@ -385,3 +402,4 @@ if __name__ == '__main__':
 #https://ru.stackoverflow.com/questions/1357843/%D0%9A%D0%B0%D0%BA-%D1%81%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C-%D1%87%D1%82%D0%BE%D0%B1%D1%8B-%D0%B8%D0%B7%D0%BE%D0%B1%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%BB%D0%BE%D1%81%D1%8C-%D0%BF%D0%BE%D0%B4-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%80-%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0
 #https://code-basics.com/ru/languages/python/lessons/default-parameters
 #https://www.youtube.com/watch?v=Xyfd2QBuPdo
+#https://dzen.ru/a/Y4Swlyu-kDD5k5rS
