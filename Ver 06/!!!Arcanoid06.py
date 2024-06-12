@@ -132,7 +132,7 @@ class Game():
                                       'Arial',
                                       brick_height)
         self.tutorial_label2 = TextObject(WIDTH // 2 - int(brick_width * 2.5),
-                                      HEIGHT * 12 // 18,
+                                      HEIGHT * 2 // 3,
                                       lambda: f'For now, press UP to change screen size',
                                       GREEN,
                                       'Arial',
@@ -140,7 +140,7 @@ class Game():
         if self.screennotchanged:
             self.objects.append(self.tutorial_label1)
             self.objects.append(self.tutorial_label2)
-        elif self.tutorial_label in self.objects:
+        elif self.tutorial_label1 in self.objects and self.tutorial_label2 in self.objects:
             self.objects.remove(self.tutorial_label1)
             self.objects.remove(self.tutorial_label2)
         self.pause_label = TextObject(WIDTH // 2 - int(brick_width * 2.5),
