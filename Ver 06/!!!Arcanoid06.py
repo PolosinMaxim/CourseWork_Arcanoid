@@ -211,12 +211,10 @@ class Game():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.bita.toleft = True
+                if event.key == pygame.K_LEFT: self.bita.toleft = True
+                elif event.key == pygame.K_RIGHT: self.bita.toright = True
                 elif event.key == pygame.K_UP and self.ball.attached and self.screennotchanged:
                     self.ChangeScreenSize()
-                elif event.key == pygame.K_RIGHT:
-                    self.bita.toright = True
                 elif event.key == pygame.K_SPACE:
                     self.ball.attached = False
                     self.screennotchanged = False
