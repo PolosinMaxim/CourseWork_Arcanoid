@@ -3,8 +3,7 @@ import pygame
 import random
 import sys
 
-# Цвета (R, G, B)
-BLACK = (0, 0, 0)
+BLACK = (0, 0, 0) # Цвета (R, G, B)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 lightRED = (255, 128, 128)
@@ -23,8 +22,6 @@ brick_field_start = HEIGHT // 6
 brick_border = 2
 min_bita_width = brick_width // 2 #25
 max_bita_width = brick_width * 4
-name_limit = 12
-
 
 class Game():
     background_image = pygame.image.load(back_image_filename)
@@ -144,7 +141,7 @@ class Game():
             self.objects.remove(self.tutorial_label1)
             self.objects.remove(self.tutorial_label2)
         self.pause_label = TextObject(WIDTH // 2 - int(brick_width * 2.5),
-                                      HEIGHT * 11 // 18,
+                                      HEIGHT * 23 // 36,
                                       lambda: f'PAUSED, press SPACE to continue',
                                       GREEN,
                                       'Arial',
@@ -162,7 +159,7 @@ class Game():
                 self.need_input = False
                 player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                 if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
-                    open("BestRecords.txt", "a").write(input("Ваше имя? ")[:name_limit] + chr(9) + str(self.scores) + chr(10))
+                    open("BestRecords.txt", "a").write(input("Ваше имя? ")[:12] + chr(9) + str(self.scores) + chr(10))
                     player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                     for i in range(len(player_list) - 1):
                         for j in range(i + 1, len(player_list)):
