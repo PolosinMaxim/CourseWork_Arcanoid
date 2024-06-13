@@ -12,8 +12,8 @@ darkGREEN = (0, 190, 0)
 BLUE = (0, 0, 255)
 lightBLUE = (128, 128, 255)
 back_image_filename = '01.jpg'
-Screen_Sizes = [(800, 600), (1280, 720), (1366, 768), (1440, 900)]
-Size_ID = 1
+Screen_Sizes = [(1024, 576), (1280, 720), (1366, 768), (1600, 900)] #16:9
+Size_ID = Screen_Sizes.index((1280, 720))
 WIDTH, HEIGHT = Screen_Sizes[Size_ID] #стартовый размер игрового окна
 FPS = 60 # частота кадров в секунду
 brick_width =  WIDTH // 15 - 2 #16 штук
@@ -46,8 +46,7 @@ class Game():
         self.newlevel()
         self.create_labels()
     def ChangeScreenSize(self):
-        global WIDTH, HEIGHT, brick_width, brick_height, brick_field_start, min_bita_width, max_bita_width, Size_ID, Screen_Sizes
-        Size_ID = (Size_ID + 1) % len(Screen_Sizes)
+        global WIDTH, HEIGHT, brick_width, brick_height, brick_field_start, min_bita_width, max_bita_width
         WIDTH, HEIGHT = Screen_Sizes[Size_ID]
         brick_width =  WIDTH // 15 - 2 #16 штук
         brick_height =  HEIGHT // 20 - 2
@@ -124,13 +123,13 @@ class Game():
         self.objects.append(self.level_label)
         self.tutorial_label1 = TextObject(WIDTH // 2 - int(brick_width * 4),
                                       HEIGHT * 11 // 18,
-                                      lambda: f'Move paddle with LEFT & RIGHT, press SPACE to begin',
+                                      lambda: f'Move paddle with LEFT and RIGHT, press SPACE to begin',
                                       GREEN,
                                       'Arial',
                                       brick_height)
-        self.tutorial_label2 = TextObject(WIDTH // 2 - int(brick_width * 2.5),
+        self.tutorial_label2 = TextObject(WIDTH // 2 - int(brick_width * 3.5),
                                       HEIGHT * 2 // 3,
-                                      lambda: f'For now, press UP to change screen size',
+                                      lambda: f'For now, press UP and DOWN to change screen size',
                                       GREEN,
                                       'Arial',
                                       brick_height)
@@ -206,6 +205,7 @@ class Game():
         for ob in self.objects:
             ob.draw(self.screen)
     def events(self):
+        global Size_ID
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -213,7 +213,9 @@ class Game():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT: self.bita.toleft = True
                 elif event.key == pygame.K_RIGHT: self.bita.toright = True
-                elif event.key == pygame.K_UP and self.ball.attached and self.screennotchanged:
+                elif (event.key == pygame.K_UP or event.key == pygame.K_DOWN) and self.ball.attached and self.screennotchanged:
+                    if event.key == pygame.K_DOWN and Size_ID > 0: Size_ID -= 1
+                    elif event.key == pygame.K_UP and Size_ID < len(Screen_Sizes) - 1: Size_ID += 1
                     self.ChangeScreenSize()
                 elif event.key == pygame.K_SPACE:
                     self.ball.attached = False
