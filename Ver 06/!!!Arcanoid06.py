@@ -155,10 +155,11 @@ class Game():
                                       brick_height)
             self.objects.append(self.gameover_label)
             if self.need_input:
+                input_name = ""
                 self.need_input = False
                 player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                 if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
-                    open("BestRecords.txt", "a").write(input("Ваше имя? ")[:12] + chr(9) + str(self.scores) + chr(10))
+                    open("BestRecords.txt", "a").write(input_name + chr(9) + str(self.scores) + chr(10)) #input("Ваше имя? ")[:12]
                     player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                     for i in range(len(player_list) - 1):
                         for j in range(i + 1, len(player_list)):
@@ -205,7 +206,6 @@ class Game():
         for ob in self.objects:
             ob.draw(self.screen)
     def events(self):
-        global Size_ID
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -214,6 +214,7 @@ class Game():
                 if event.key == pygame.K_LEFT: self.bita.toleft = True
                 elif event.key == pygame.K_RIGHT: self.bita.toright = True
                 elif (event.key == pygame.K_UP or event.key == pygame.K_DOWN) and self.ball.attached and self.screennotchanged:
+                    global Size_ID
                     if event.key == pygame.K_DOWN and Size_ID > 0: Size_ID -= 1
                     elif event.key == pygame.K_UP and Size_ID < len(Screen_Sizes) - 1: Size_ID += 1
                     self.ChangeScreenSize()
@@ -223,7 +224,7 @@ class Game():
                     if self.paused:
                         self.paused = False
                         self.objects.remove(self.pause_label)
-                elif event.key == pygame.K_ESCAPE:
+                elif event.key == pygame.K_ESCAPE and not self.screennotchanged:
                     if not self.paused:
                         self.paused = True
                         self.objects.append(self.pause_label)
