@@ -1,4 +1,3 @@
-# Pygame шаблон - скелет для нового проекта Pygame
 import pygame
 import random
 import sys
@@ -22,15 +21,19 @@ brick_field_start = HEIGHT // 6
 brick_border = 2
 min_bita_width = brick_width // 2 #25
 max_bita_width = brick_width * 4
+name_limit = 12
+brick_n = 15
+brick_m = 8
 
 class Game():
     background_image = pygame.image.load(back_image_filename)
     background_image = pygame.transform.scale(background_image,(WIDTH, HEIGHT))
     paused = False
     game_over = False
-    need_input = True
+    need_input = False
+    input_name = ""
     scores = 0
-    lives = 3
+    lives = 1
     screennotchanged = True
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
@@ -58,18 +61,13 @@ class Game():
         self.objects = []
         self.bita = None
         self.create_bita()
-        #self.level = 0
-        #self.surprises = []
         self.ball = None
         self.create_ball()
-        #self.newlevel()
         self.create_bricks()
         self.create_labels()
         self.bita.resize()
         self.ball.resize()
-        #self.lives = 3
     def newlevel(self):
-        self.bricks = []
         for surp in self.surprises: self.objects.remove(surp)
         self.surprises.clear()
         self.create_bricks()
@@ -85,8 +83,9 @@ class Game():
         self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
         self.objects.append(self.ball)
     def create_bricks(self):
-        for i in range(15):
-            for j in range(8):
+        self.bricks = []
+        for i in range(brick_n):
+            for j in range(brick_m):
                 brick = Brick()
                 brick.x = i * (brick_width + brick_border)
                 brick.y = brick_field_start + j * (brick_height + brick_border)
@@ -104,69 +103,73 @@ class Game():
     def create_labels(self):
         self.score_label = TextObject(5,
                                       5,
-                                      lambda: f'SCORE: {self.scores}',
+                                      lambda: f'ОЧКИ: {self.scores}',
                                       GREEN,
                                       'Arial',
                                       brick_height)
         self.objects.append(self.score_label)
         self.lives_label = TextObject(WIDTH * 7 // 8,
                                       5,
-                                      lambda: f'LIVES: {self.lives}',
+                                      lambda: f'ЖИЗНИ: {self.lives}',
                                       GREEN,
                                       'Arial',
                                       brick_height)
         self.objects.append(self.lives_label)
         self.level_label = TextObject((WIDTH - brick_width) // 2,
                                       5,
-                                      lambda: f'LEVEL: {self.level}',
+                                      lambda: f'УРОВЕНЬ: {self.level}',
                                       GREEN,
                                       'Arial',
                                       brick_height)
         self.objects.append(self.level_label)
-        self.tutorial_label1 = TextObject(WIDTH // 2 - int(brick_width * 4),
+        self.tutorial_label1 = TextObject(WIDTH // 2 - int(brick_width * 5.5),
                                       HEIGHT * 11 // 18,
-                                      lambda: f'Move paddle with LEFT and RIGHT, press SPACE to begin',
+                                      lambda: f'Биту двигать стрелками ВЛЕВО и ВПРАВО; нажмите ПРОБЕЛ для начала',
                                       GREEN,
                                       'Arial',
                                       brick_height)
-        self.tutorial_label2 = TextObject(WIDTH // 2 - int(brick_width * 3.5),
+        self.tutorial_label2 = TextObject(WIDTH // 2 - int(brick_width * 4.5),
                                       HEIGHT * 2 // 3,
-                                      lambda: f'For now, press UP and DOWN to change screen size',
+                                      lambda: f'Пока, можно менять размер экрана клавишами ВВЕРХ и ВНИЗ',
                                       GREEN,
                                       'Arial',
                                       brick_height)
         self.objects.append(self.tutorial_label1)
         self.objects.append(self.tutorial_label2)
-        self.pause_label = TextObject(WIDTH // 2 - int(brick_width * 2.5),
+        self.gameover_label = TextObject(WIDTH // 2 - brick_width,
+                                      brick_height * 2,
+                                      lambda: f'ИГРА ОКОНЧЕНА',
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+        self.pause_label = TextObject(WIDTH // 2 - int(brick_width * 3.5),
                                       HEIGHT * 23 // 36,
-                                      lambda: f'PAUSED, press SPACE to continue',
+                                      lambda: f'ПАУЗА; нажмите ПРОБЕЛ, чтобы продолжить',
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+        self.input_label = TextObject(WIDTH // 2 - int(brick_width * 4),
+                                      HEIGHT * 11 // 18,
+                                      lambda: f'Введите Ваше имя, и нажмите ENTER: {self.input_name}',
                                       GREEN,
                                       'Arial',
                                       brick_height)
     def update(self):
-        if self.game_over:
-            self.gameover_label = TextObject(WIDTH // 2 - brick_width,
-                                      brick_height * 2,
-                                      lambda: f'GAME OVER',
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-            self.objects.append(self.gameover_label)
-            if self.need_input:
-                input_name = ""
-                self.need_input = False
+        if not self.game_over:
+            for ob in self.objects:
+                ob.update()
+            self.check_borders()
+            self.check_bricks()
+            self.check_surprises()
+            if self.ball.attached:
+                self.ball.ball_x = self.bita.bita_x + self.bita.bita_width / 2
+                self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
+    def update_records(self):
                 player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
-                if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
-                    open("BestRecords.txt", "a").write(input_name + chr(9) + str(self.scores) + chr(10)) #input("Ваше имя? ")[:12]
-                    player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
-                    for i in range(len(player_list) - 1):
-                        for j in range(i + 1, len(player_list)):
-                            if int(player_list[j][-1][:-1]) > int(player_list[i][-1][:-1]):
-                                c = player_list[j]
-                                player_list[j] = player_list[i]
-                                player_list[i] = c
-                    newfile = open("BestRecords.txt", "w")
-                    for i in player_list: newfile.write(chr(9).join(i))
+                if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]) or True: #отладка
+                    self.need_input = True
+                    self.objects.append(self.input_label)
+                    
                 print(player_list)
                 self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
                                       HEIGHT * 3 // 5,
@@ -191,31 +194,46 @@ class Game():
                                       'Arial',
                                       brick_height)
                     self.objects.append(self.thirdbest_label)
-        else:
-            for ob in self.objects:
-                ob.update()
-            self.check_borders()
-            self.check_bricks()
-            self.check_surprises()
-            if self.ball.attached:
-                self.ball.ball_x = self.bita.bita_x + self.bita.bita_width / 2
-                self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
     def draw(self):
         for ob in self.objects:
             ob.draw(self.screen)
+    def EventsInput(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.type == pygame.K_RETURN:
+                    need_input = False
+                    self.objects.remove(self.input_label)
+                    open("BestRecords.txt", "a").write(self.input_name + chr(9) + str(self.scores) + chr(10)) #input("Ваше имя? ")[:12]
+                    player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
+                    for i in range(len(player_list) - 1):
+                        for j in range(i + 1, len(player_list)):
+                            if int(player_list[j][-1][:-1]) > int(player_list[i][-1][:-1]):
+                                c = player_list[j]
+                                player_list[j] = player_list[i]
+                                player_list[i] = c
+                    newfile = open("BestRecords.txt", "w")
+                    for i in player_list: newfile.write(chr(9).join(i))
+                elif event.type == pygame.K_BACKSPACE:
+                    self.input_name = self.input_name[:-1]
+                elif len(self.input_name) < name_limit:
+                    self.input_name += event.unicode
     def events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT: self.bita.toleft = True
+                if self.game_over and self.need_input:
+                    self.objects.remove(self.input_label)
+                elif event.key == pygame.K_LEFT: self.bita.toleft = True
                 elif event.key == pygame.K_RIGHT: self.bita.toright = True
                 elif (event.key == pygame.K_UP or event.key == pygame.K_DOWN) and self.ball.attached and self.screennotchanged:
                     global Size_ID
                     if event.key == pygame.K_DOWN and Size_ID > 0: Size_ID -= 1
                     elif event.key == pygame.K_UP and Size_ID < len(Screen_Sizes) - 1: Size_ID += 1
-                    print(Size_ID, Screen_Sizes[Size_ID], Screen_Sizes)
                     self.ChangeScreenSize()
                 elif event.key == pygame.K_SPACE:
                     self.ball.attached = False
@@ -226,7 +244,7 @@ class Game():
                         self.paused = False
                         self.objects.remove(self.pause_label)
                 elif event.key == pygame.K_ESCAPE and not self.screennotchanged:
-                    if not self.paused:
+                    if not self.paused and not self.game_over:
                         self.paused = True
                         self.objects.append(self.pause_label)
             elif event.type == pygame.KEYUP:
@@ -235,31 +253,29 @@ class Game():
     def run(self):
         while True:
             self.screen.blit(self.background_image, (0, 0))
-            self.events()
+            if self.game_over and self.need_input: self.EventsInput()
+            else: self.events()
             if not self.paused: self.update()
             self.draw()
             pygame.display.update()
             self.clock.tick(FPS)
     def check_borders(self):
-        lost = False
         if self.ball.ball_x > WIDTH - self.ball.ball_radius or self.ball.ball_x < self.ball.ball_radius:
             self.ball.x_speed *= -1
         if self.ball.ball_y < self.ball.ball_radius:
             self.ball.y_speed *= -1
         if self.ball.ball_y > self.bita.bita_y - self.ball.ball_radius and self.ball.ball_x >= self.bita.bita_x and self.ball.ball_x < self.bita.bita_x + self.bita.bita_width:
-            #if self.ball.ball_y - self.ball.ball_radius > self.bita.bita_y:
-                #lost = True
-            #else:
                 self.ball.y_speed *= -1
                 self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
                 if self.bita.toright: self.ball.x_speed += 0.5
                 elif self.bita.toleft: self.ball.x_speed -= 0.5
         if self.ball.ball_y > HEIGHT - self.ball.ball_radius:
-            lost = True
-        if lost:
             self.lives -= 1
             self.bita.reset()
-            if self.lives < 1: self.game_over = True
+            if self.lives < 1:
+                self.game_over = True
+                self.objects.append(self.gameover_label)
+                self.update_records()
             else:
                 self.objects.remove(self.ball)
                 for surp in self.surprises: self.objects.remove(surp)
@@ -377,8 +393,8 @@ class Brick():
     def __init__(self):
         self.tipe = 0
         rr = random.randrange(10)
-        if rr<2: self.tipe = 2
-        elif rr<5: self.tipe = 1
+        if rr < 2: self.tipe = 2
+        elif rr < 5: self.tipe = 1
         self.x = None
         self.y = None
     def update(self):
@@ -423,14 +439,7 @@ class TextObject:
         text_surface = self.font.render(text, False, self.color)
         return text_surface, text_surface.get_rect()
     def update(self):
-        #if NameEnter: continue
         pass
-
-'''class NameEnter(TextObject):
-    def __init__(self, x, y, text_func, color, font_name, font_size):
-        super().__init__(x, y, text_func, color, font_name, font_size)
-    def update(self):
-        pass'''
 
 if __name__ == '__main__':
     Game().run()
@@ -443,4 +452,3 @@ if __name__ == '__main__':
 #https://ru.stackoverflow.com/questions/1357843/%D0%9A%D0%B0%D0%BA-%D1%81%D0%B4%D0%B5%D0%BB%D0%B0%D1%82%D1%8C-%D1%87%D1%82%D0%BE%D0%B1%D1%8B-%D0%B8%D0%B7%D0%BE%D0%B1%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B0%D0%B8%D0%B2%D0%B0%D0%BB%D0%BE%D1%81%D1%8C-%D0%BF%D0%BE%D0%B4-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%80-%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0
 #https://code-basics.com/ru/languages/python/lessons/default-parameters
 #https://www.youtube.com/watch?v=Xyfd2QBuPdo
-#https://dzen.ru/a/Y4Swlyu-kDD5k5rS
