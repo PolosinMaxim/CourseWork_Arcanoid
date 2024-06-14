@@ -2,7 +2,7 @@ import pygame
 import random
 import sys
 
-BLACK = (0, 0, 0) # Цвета (R, G, B)
+BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 lightRED = (255, 128, 128)
@@ -13,13 +13,13 @@ lightBLUE = (128, 128, 255)
 back_image_filename = '01.jpg'
 Screen_Sizes = [(1024, 576), (1064, 600), (1136, 640), (1280, 720), (1366, 768), (1400, 800), (1440, 810), (1536, 864), (1600, 900)] #16:9
 Size_ID = Screen_Sizes.index((1280, 720))
-WIDTH, HEIGHT = Screen_Sizes[Size_ID] #стартовый размер игрового окна
-FPS = 60 # частота кадров в секунду
-brick_width =  WIDTH // 15 - 2 #16 штук
+WIDTH, HEIGHT = Screen_Sizes[Size_ID]
+FPS = 60
+brick_width =  WIDTH // 15 - 2
 brick_height =  HEIGHT // 20 - 2
 brick_field_start = HEIGHT // 6
 brick_border = 2
-min_bita_width = brick_width // 2 #25
+min_bita_width = brick_width // 2
 max_bita_width = brick_width * 4
 name_limit = 12
 brick_n = 15
@@ -51,10 +51,10 @@ class Game():
     def ChangeScreenSize(self):
         global WIDTH, HEIGHT, brick_width, brick_height, brick_field_start, min_bita_width, max_bita_width
         WIDTH, HEIGHT = Screen_Sizes[Size_ID]
-        brick_width =  WIDTH // 15 - 2 #16 штук
+        brick_width =  WIDTH // 15 - 2
         brick_height =  HEIGHT // 20 - 2
         brick_field_start = HEIGHT // 6
-        min_bita_width = brick_width // 2 #25
+        min_bita_width = brick_width // 2
         max_bita_width = brick_width * 4
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.background_image = pygame.transform.scale(self.background_image,(WIDTH, HEIGHT))
@@ -166,10 +166,9 @@ class Game():
                 self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
     def update_records(self):
                 player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
-                if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]) or True: #отладка
+                if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
                     self.need_input = True
                     self.objects.append(self.input_label)
-                    
                 print(player_list)
                 self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
                                       HEIGHT * 3 // 5,
@@ -206,7 +205,7 @@ class Game():
                 if event.type == pygame.K_RETURN:
                     need_input = False
                     self.objects.remove(self.input_label)
-                    open("BestRecords.txt", "a").write(self.input_name + chr(9) + str(self.scores) + chr(10)) #input("Ваше имя? ")[:12]
+                    open("BestRecords.txt", "a").write(self.input_name + chr(9) + str(self.scores) + chr(10))
                     player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                     for i in range(len(player_list) - 1):
                         for j in range(i + 1, len(player_list)):
@@ -320,17 +319,15 @@ class Game():
     def check_surprises(self):
         for surp in self.surprises:
             if surp.y >= self.bita.bita_y and surp.y < self.bita.bita_y + self.bita.bita_height and surp.x <= self.bita.bita_x + self.bita.bita_width and surp.x + surp.surp_width >= self.bita.bita_x: #surp.x >= self.bita.bita_x and surp.x =< self.bita.bita_x + self.bita.bita_width:
-                if surp.tipe == 0: #доп. жизнь
+                if surp.tipe == 0:
                     self.lives += 1
-                elif surp.tipe == 1: #расширяет биту
-                    self.bita.bita_width += brick_width // 2
-                    self.bita.bita_width = min(self.bita.bita_width, max_bita_width)
+                elif surp.tipe == 1:
+                    self.bita.bita_width = min(self.bita.bita_width + brick_width // 2, max_bita_width)
                     if self.bita.bita_width != max_bita_width: self.bita.bita_x -= brick_width // 4
                     if self.bita.bita_x > WIDTH - self.bita.bita_width: self.bita.bita_x = WIDTH - self.bita.bita_width - 1 #доп. проверка на случай, если вылезает за границы
                     elif self.bita.bita_x < 0: self.bita.bita_x = 1
                 elif surp.tipe == 2: #сужает биту
-                    self.bita.bita_width -= brick_width // 2
-                    self.bita.bita_width = max(self.bita.bita_width, min_bita_width)
+                    self.bita.bita_width = max(self.bita.bita_width - brick_width // 2, min_bita_width)
                     if self.bita.bita_width != min_bita_width: self.bita.bita_x += brick_width // 4
                 self.objects.remove(surp)
                 self.surprises.remove(surp)
@@ -354,9 +351,7 @@ class Ball():
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (self.ball_x, self.ball_y), self.ball_radius)
     def update(self):
-        if self.attached:
-            pass
-        else:
+        if not self.attached:
             self.ball_x += self.x_speed
             self.ball_y += self.y_speed
 
@@ -380,12 +375,10 @@ class Bita():
         self.toright = False
         self.bita_width = brick_width * 2
     def update(self):
-        if self.toleft:
-            if self.bita_x > 0:
-                self.bita_x -= self.speed
-        if self.toright:
-            if self.bita_x < WIDTH - self.bita_width:
-                self.bita_x += self.speed
+        if self.toleft and self.bita_x > 0:
+            self.bita_x -= self.speed
+        if self.toright and self.bita_x < WIDTH - self.bita_width:
+            self.bita_x += self.speed
     def draw(self,screen):
         pygame.draw.rect(screen, BLUE, (self.bita_x, self.bita_y, self.bita_width, self.bita_height))
 
