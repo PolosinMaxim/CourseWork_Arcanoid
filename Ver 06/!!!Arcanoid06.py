@@ -12,7 +12,7 @@ darkGREEN = (0, 190, 0)
 BLUE = (0, 0, 255)
 lightBLUE = (128, 128, 255)
 back_image_filename = '01.jpg'
-Screen_Sizes = [(1024, 576), (1280, 720), (1366, 768), (1600, 900)] #16:9
+Screen_Sizes = [(1024, 576), (1064, 600), (1136, 640), (1280, 720), (1366, 768), (1400, 800), (1440, 810), (1536, 864), (1600, 900)] #16:9
 Size_ID = Screen_Sizes.index((1280, 720))
 WIDTH, HEIGHT = Screen_Sizes[Size_ID] #стартовый размер игрового окна
 FPS = 60 # частота кадров в секунду
@@ -58,14 +58,16 @@ class Game():
         self.objects = []
         self.bita = None
         self.create_bita()
-        self.level = 0
-        self.surprises = []
+        #self.level = 0
+        #self.surprises = []
         self.ball = None
-        self.newlevel()
+        self.create_ball()
+        #self.newlevel()
+        self.create_bricks()
         self.create_labels()
         self.bita.resize()
         self.ball.resize()
-        self.lives = 3
+        #self.lives = 3
     def newlevel(self):
         self.bricks = []
         for surp in self.surprises: self.objects.remove(surp)
@@ -133,12 +135,8 @@ class Game():
                                       GREEN,
                                       'Arial',
                                       brick_height)
-        if self.screennotchanged:
-            self.objects.append(self.tutorial_label1)
-            self.objects.append(self.tutorial_label2)
-        elif self.tutorial_label1 in self.objects and self.tutorial_label2 in self.objects:
-            self.objects.remove(self.tutorial_label1)
-            self.objects.remove(self.tutorial_label2)
+        self.objects.append(self.tutorial_label1)
+        self.objects.append(self.tutorial_label2)
         self.pause_label = TextObject(WIDTH // 2 - int(brick_width * 2.5),
                                       HEIGHT * 23 // 36,
                                       lambda: f'PAUSED, press SPACE to continue',
@@ -217,10 +215,13 @@ class Game():
                     global Size_ID
                     if event.key == pygame.K_DOWN and Size_ID > 0: Size_ID -= 1
                     elif event.key == pygame.K_UP and Size_ID < len(Screen_Sizes) - 1: Size_ID += 1
+                    print(Size_ID, Screen_Sizes[Size_ID], Screen_Sizes)
                     self.ChangeScreenSize()
                 elif event.key == pygame.K_SPACE:
                     self.ball.attached = False
                     self.screennotchanged = False
+                    if self.tutorial_label1 in self.objects: self.objects.remove(self.tutorial_label1)
+                    if self.tutorial_label2 in self.objects: self.objects.remove(self.tutorial_label2)
                     if self.paused:
                         self.paused = False
                         self.objects.remove(self.pause_label)
@@ -246,9 +247,9 @@ class Game():
         if self.ball.ball_y < self.ball.ball_radius:
             self.ball.y_speed *= -1
         if self.ball.ball_y > self.bita.bita_y - self.ball.ball_radius and self.ball.ball_x >= self.bita.bita_x and self.ball.ball_x < self.bita.bita_x + self.bita.bita_width:
-            if self.ball.ball_y - self.ball.ball_radius > self.bita.bita_y:
-                lost = True
-            else:
+            #if self.ball.ball_y - self.ball.ball_radius > self.bita.bita_y:
+                #lost = True
+            #else:
                 self.ball.y_speed *= -1
                 self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
                 if self.bita.toright: self.ball.x_speed += 0.5
