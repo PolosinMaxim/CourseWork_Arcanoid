@@ -24,6 +24,14 @@ max_bita_width = brick_width * 4
 name_limit = 12
 brick_n = 15
 brick_m = 8
+gsounds_effects = dict(
+    swall='swall.wav',
+    sbita='sbita.wav',
+    sbrick='sbrick.wav',
+    sbegin='begin.wav',
+    send='end.wav',
+    ssurprise='surprise.wav',
+)
 
 class Game():
     background_image = pygame.image.load(back_image_filename)
@@ -39,6 +47,7 @@ class Game():
     clock = pygame.time.Clock()
     def __init__(self):
         pygame.init()
+        self.sound_effects = {name: pygame.mixer.Sound(sound) for name, sound in gsounds_effects.items()}
         pygame.display.set_caption("Parkanoid")
         self.objects = []
         self.bita = None
@@ -68,6 +77,7 @@ class Game():
         self.bita.resize()
         self.ball.resize()
     def newlevel(self):
+        self.sound_effects['sbegin'].play() #self.sound_effects[''].play()
         for surp in self.surprises: self.objects.remove(surp)
         self.surprises.clear()
         self.create_bricks()
@@ -169,30 +179,6 @@ class Game():
                 if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
                     self.need_input = True
                     self.objects.append(self.input_label)
-                print(player_list)
-                self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 3 // 5,
-                                      lambda: player_list[0][0] + "   " + player_list[0][1][:-1],
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-                self.objects.append(self.firstbest_label)
-                if len(player_list) >= 2:
-                    self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 7 // 10,
-                                      lambda: player_list[1][0] + "   " + player_list[1][1][:-1],
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-                    self.objects.append(self.secondbest_label)
-                if len(player_list) >= 3:
-                    self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 4 // 5,
-                                      lambda: player_list[2][0] + "   " + player_list[2][1][:-1],
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-                    self.objects.append(self.thirdbest_label)
     def draw(self):
         for ob in self.objects:
             ob.draw(self.screen)
@@ -202,7 +188,7 @@ class Game():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.type == pygame.K_RETURN:
+                if event.key == pygame.K_RETURN:
                     need_input = False
                     self.objects.remove(self.input_label)
                     open("BestRecords.txt", "a").write(self.input_name + chr(9) + str(self.scores) + chr(10))
@@ -215,7 +201,30 @@ class Game():
                                 player_list[i] = c
                     newfile = open("BestRecords.txt", "w")
                     for i in player_list: newfile.write(chr(9).join(i))
-                elif event.type == pygame.K_BACKSPACE:
+                    self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 3 // 5,
+                                      lambda: player_list[0][0] + "   " + player_list[0][1][:-1],
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+                    self.objects.append(self.firstbest_label)
+                    if len(player_list) >= 2:
+                        self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 7 // 10,
+                                      lambda: player_list[1][0] + "   " + player_list[1][1][:-1],
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+                        self.objects.append(self.secondbest_label)
+                    if len(player_list) >= 3:
+                        self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 4 // 5,
+                                      lambda: player_list[2][0] + "   " + player_list[2][1][:-1],
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+                        self.objects.append(self.thirdbest_label)
+                elif event.key == pygame.K_BACKSPACE:
                     self.input_name = self.input_name[:-1]
                 elif len(self.input_name) < name_limit:
                     self.input_name += event.unicode
