@@ -36,12 +36,10 @@ gsounds_effects = dict(
 class Game():
     background_image = pygame.image.load(back_image_filename)
     background_image = pygame.transform.scale(background_image,(WIDTH, HEIGHT))
-    paused = False
-    game_over = False
-    need_input = False
+    paused = game_over = need_input = False
     input_name = ""
     scores = 0
-    lives = 1
+    lives = 3
     screennotchanged = True
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
@@ -50,11 +48,10 @@ class Game():
         self.sound_effects = {name: pygame.mixer.Sound(sound) for name, sound in gsounds_effects.items()}
         pygame.display.set_caption("Parkanoid")
         self.objects = []
-        self.bita = None
+        self.bita = self.ball = None
         self.create_bita()
         self.level = 0
         self.surprises = []
-        self.ball = None
         self.newlevel()
         self.create_labels()
     def ChangeScreenSize(self):
@@ -68,9 +65,8 @@ class Game():
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.background_image = pygame.transform.scale(self.background_image,(WIDTH, HEIGHT))
         self.objects = []
-        self.bita = None
+        self.bita = self.ball = None
         self.create_bita()
-        self.ball = None
         self.create_ball()
         self.create_bricks()
         self.create_labels()
@@ -179,6 +175,32 @@ class Game():
                 if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
                     self.need_input = True
                     self.objects.append(self.input_label)
+                else: self.records_show()
+    def records_show(self):
+        player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
+        self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 3 // 5,
+                                      lambda: player_list[0][0] + "   " + player_list[0][1][:-1],
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+        self.objects.append(self.firstbest_label)
+        if len(player_list) >= 2:
+            self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 7 // 10,
+                                      lambda: player_list[1][0] + "   " + player_list[1][1][:-1],
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+            self.objects.append(self.secondbest_label)
+        if len(player_list) >= 3:
+            self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
+                                      HEIGHT * 4 // 5,
+                                      lambda: player_list[2][0] + "   " + player_list[2][1][:-1],
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+            self.objects.append(self.thirdbest_label)
     def draw(self):
         for ob in self.objects:
             ob.draw(self.screen)
@@ -201,29 +223,7 @@ class Game():
                                 player_list[i] = c
                     newfile = open("BestRecords.txt", "w")
                     for i in player_list: newfile.write(chr(9).join(i))
-                    self.firstbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 3 // 5,
-                                      lambda: player_list[0][0] + "   " + player_list[0][1][:-1],
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-                    self.objects.append(self.firstbest_label)
-                    if len(player_list) >= 2:
-                        self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 7 // 10,
-                                      lambda: player_list[1][0] + "   " + player_list[1][1][:-1],
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-                        self.objects.append(self.secondbest_label)
-                    if len(player_list) >= 3:
-                        self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 4 // 5,
-                                      lambda: player_list[2][0] + "   " + player_list[2][1][:-1],
-                                      GREEN,
-                                      'Arial',
-                                      brick_height)
-                        self.objects.append(self.thirdbest_label)
+                    self.records_show()
                 elif event.key == pygame.K_BACKSPACE:
                     self.input_name = self.input_name[:-1]
                 elif len(self.input_name) < name_limit:
@@ -244,8 +244,7 @@ class Game():
                     elif event.key == pygame.K_UP and Size_ID < len(Screen_Sizes) - 1: Size_ID += 1
                     self.ChangeScreenSize()
                 elif event.key == pygame.K_SPACE:
-                    self.ball.attached = False
-                    self.screennotchanged = False
+                    self.ball.attached = self.screennotchanged = False
                     if self.tutorial_label1 in self.objects: self.objects.remove(self.tutorial_label1)
                     if self.tutorial_label2 in self.objects: self.objects.remove(self.tutorial_label2)
                     if self.paused:
@@ -256,8 +255,7 @@ class Game():
                         self.paused = True
                         self.objects.append(self.pause_label)
             elif event.type == pygame.KEYUP:
-                self.bita.toleft = False
-                self.bita.toright = False
+                self.bita.toleft = self.bita.toright = False
     def run(self):
         while True:
             self.screen.blit(self.background_image, (0, 0))
@@ -349,8 +347,7 @@ class Ball():
     color = RED
     attached = True # Если True, то прикреплён к бите
     def __init__(self):
-        ball_x = None   # Координаты центра мяча
-        ball_y = None
+        ball_x = ball_y = None #Координаты центра мяча
         self.x_speed = self.ball_radius / 5   # Текущая скорость по x
         self.y_speed = self.ball_radius / -5  # Текущая скорость по y
     def resize(self):
@@ -370,8 +367,7 @@ class Bita():
     speed = brick_height // 4
     def __init__(self):
         self.bita_x = WIDTH // 2 - brick_width
-        self.toleft = False
-        self.toright = False
+        self.toleft = self.toright = False
         self.bita_width = brick_width * 2
     def resize(self):
         self.bita_y = HEIGHT - 100
@@ -380,8 +376,7 @@ class Bita():
         self.bita_width = brick_width * 2
     def reset(self):
         self.bita_x = WIDTH // 2 - brick_width
-        self.toleft = False
-        self.toright = False
+        self.toleft = self.toright = False
         self.bita_width = brick_width * 2
     def update(self):
         if self.toleft and self.bita_x > 0:
@@ -397,8 +392,7 @@ class Brick():
         rr = random.randrange(10)
         if rr < 2: self.tipe = 2
         elif rr < 5: self.tipe = 1
-        self.x = None
-        self.y = None
+        self.x = self.y = None
     def update(self):
         pass
     def draw(self,screen):
@@ -406,10 +400,8 @@ class Brick():
 
 class Surprises():
     def __init__(self):
-        self.x = None
-        self.y = None
-        self.tipe = 0
-        self.surp_width = 0
+        self.x = self.y = None
+        self.tipe = self.surp_width = 0
     def draw(self, screen):
         if self.tipe == 0:
             self.surp_width = brick_height // 4
@@ -430,12 +422,9 @@ class TextObject:
         self.color = color
         self.font = pygame.font.SysFont(font_name, font_size)
         self.bounds = self.get_surface(text_func())
-    def draw(self, surface, centralized = False):
+    def draw(self, surface): #, centralized = False
         text_surface, self.bounds = self.get_surface(self.text_func())
-        if centralized:
-            pos = (self.pos[0] - self.bounds.width // 2, self.pos[1])
-        else:
-            pos = self.pos
+        pos = self.pos
         surface.blit(text_surface, pos)
     def get_surface(self, text):
         text_surface = self.font.render(text, False, self.color)
