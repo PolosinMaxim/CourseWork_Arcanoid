@@ -11,19 +11,19 @@ darkGREEN = (0, 190, 0)
 BLUE = (0, 0, 255)
 lightBLUE = (128, 128, 255)
 back_image_filename = '01.jpg'
-Screen_Sizes = [(1024, 576), (1064, 600), (1136, 640), (1280, 720), (1366, 768), (1400, 800), (1440, 810), (1536, 864), (1600, 900)] #16:9
+Screen_Sizes = [(1024, 576), (1064, 600), (1136, 640), (1280, 720), (1366, 768), (1400, 800), (1440, 810), (1536, 864), (1600, 900)]
 Size_ID = Screen_Sizes.index((1280, 720))
 WIDTH, HEIGHT = Screen_Sizes[Size_ID]
 FPS = 60
-brick_width =  WIDTH // 15 - 2
-brick_height =  HEIGHT // 20 - 2
-brick_field_start = HEIGHT // 6
+brick_n = 15
+brick_m = 8
 brick_border = 2
+brick_width =  WIDTH // brick_n - brick_border
+brick_height =  HEIGHT // 20 - brick_border
+brick_field_start = HEIGHT // 6
 min_bita_width = brick_width // 2
 max_bita_width = brick_width * 4
 name_limit = 12
-brick_n = 15
-brick_m = 8
 gsounds_effects = dict(
     swall='swall.wav',
     sbita='sbita.wav',
@@ -57,8 +57,8 @@ class Game():
     def ChangeScreenSize(self):
         global WIDTH, HEIGHT, brick_width, brick_height, brick_field_start, min_bita_width, max_bita_width
         WIDTH, HEIGHT = Screen_Sizes[Size_ID]
-        brick_width =  WIDTH // 15 - 2
-        brick_height =  HEIGHT // 20 - 2
+        brick_width =  WIDTH // brick_n - brick_border
+        brick_height =  HEIGHT // 20 - brick_border
         brick_field_start = HEIGHT // 6
         min_bita_width = brick_width // 2
         max_bita_width = brick_width * 4
@@ -73,7 +73,7 @@ class Game():
         self.bita.resize()
         self.ball.resize()
     def newlevel(self):
-        self.sound_effects['sbegin'].play() #self.sound_effects[''].play()
+        self.sound_effects['sbegin'].play()
         for surp in self.surprises: self.objects.remove(surp)
         self.surprises.clear()
         self.create_bricks()
@@ -85,6 +85,8 @@ class Game():
         self.objects.append(self.bita)
     def create_ball(self):
         self.ball = Ball()
+        if not self.screennotchanged and Size_ID != Screen_Sizes.index((1280, 720)):
+            self.ball.resize()
         self.ball.ball_x = self.bita.bita_x + self.bita.bita_width / 2
         self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
         self.objects.append(self.ball)
@@ -187,7 +189,7 @@ class Game():
         self.objects.append(self.firstbest_label)
         if len(player_list) >= 2:
             self.secondbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 7 // 10,
+                                      HEIGHT * 13 // 20,
                                       lambda: player_list[1][0] + "   " + player_list[1][1][:-1],
                                       GREEN,
                                       'Arial',
@@ -195,7 +197,7 @@ class Game():
             self.objects.append(self.secondbest_label)
         if len(player_list) >= 3:
             self.thirdbest_label = TextObject(WIDTH // 2 - brick_width,
-                                      HEIGHT * 4 // 5,
+                                      HEIGHT * 7 // 10,
                                       lambda: player_list[2][0] + "   " + player_list[2][1][:-1],
                                       GREEN,
                                       'Arial',
@@ -221,8 +223,8 @@ class Game():
                                 c = player_list[j]
                                 player_list[j] = player_list[i]
                                 player_list[i] = c
-                    newfile = open("BestRecords.txt", "w")
-                    for i in player_list: newfile.write(chr(9).join(i))
+                    open("BestRecords.txt", "w")
+                    for i in player_list: open("BestRecords.txt", "a").write(chr(9).join(i))
                     self.records_show()
                 elif event.key == pygame.K_BACKSPACE:
                     self.input_name = self.input_name[:-1]
@@ -234,9 +236,7 @@ class Game():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if self.game_over and self.need_input:
-                    self.objects.remove(self.input_label)
-                elif event.key == pygame.K_LEFT: self.bita.toleft = True
+                if event.key == pygame.K_LEFT: self.bita.toleft = True
                 elif event.key == pygame.K_RIGHT: self.bita.toright = True
                 elif (event.key == pygame.K_UP or event.key == pygame.K_DOWN) and self.ball.attached and self.screennotchanged:
                     global Size_ID
@@ -266,17 +266,25 @@ class Game():
             pygame.display.update()
             self.clock.tick(FPS)
     def check_borders(self):
+        lost = False
         if self.ball.ball_x > WIDTH - self.ball.ball_radius or self.ball.ball_x < self.ball.ball_radius:
             self.ball.x_speed *= -1
+            self.sound_effects['swall'].play()
         if self.ball.ball_y < self.ball.ball_radius:
             self.ball.y_speed *= -1
+            self.sound_effects['swall'].play()
         if self.ball.ball_y > self.bita.bita_y - self.ball.ball_radius and self.ball.ball_x >= self.bita.bita_x and self.ball.ball_x < self.bita.bita_x + self.bita.bita_width:
+            if self.ball.ball_y - self.ball.ball_radius > self.bita.bita_y and not self.screennotchanged: lost = True
+            else:
                 self.ball.y_speed *= -1
+                self.sound_effects['sbita'].play()
                 self.ball.ball_y = self.bita.bita_y - self.ball.ball_radius
                 if self.bita.toright: self.ball.x_speed += 0.5
                 elif self.bita.toleft: self.ball.x_speed -= 0.5
-        if self.ball.ball_y > HEIGHT - self.ball.ball_radius:
+        if self.ball.ball_y > HEIGHT - self.ball.ball_radius: lost = True
+        if lost:
             self.lives -= 1
+            self.sound_effects['send'].play()
             self.bita.reset()
             if self.lives < 1:
                 self.game_over = True
@@ -317,15 +325,17 @@ class Game():
                 result = True
             if result:
                 self.scores += 1
+                self.sound_effects['sbrick'].play()
                 if brick.tipe == 0:
                     self.objects.remove(brick)
                     self.bricks.remove(brick)
                     self.create_surprise(self.ball.ball_x, self.ball.ball_y)
                 else: brick.tipe -= 1
-                if len(self.bricks) ==0: self.newlevel()
+                if len(self.bricks) == 0: self.newlevel()
     def check_surprises(self):
         for surp in self.surprises:
             if surp.y >= self.bita.bita_y and surp.y < self.bita.bita_y + self.bita.bita_height and surp.x <= self.bita.bita_x + self.bita.bita_width and surp.x + surp.surp_width >= self.bita.bita_x: #surp.x >= self.bita.bita_x and surp.x =< self.bita.bita_x + self.bita.bita_width:
+                self.sound_effects['ssurprise'].play()
                 if surp.tipe == 0:
                     self.lives += 1
                 elif surp.tipe == 1:
@@ -345,15 +355,15 @@ class Game():
 class Ball():
     ball_radius = brick_width // 5
     color = RED
-    attached = True # Если True, то прикреплён к бите
+    attached = True
     def __init__(self):
-        ball_x = ball_y = None #Координаты центра мяча
-        self.x_speed = self.ball_radius / 5   # Текущая скорость по x
-        self.y_speed = self.ball_radius / -5  # Текущая скорость по y
+        ball_x = ball_y = None
+        self.x_speed = self.ball_radius / 5
+        self.y_speed = self.ball_radius / -5
     def resize(self):
         self.ball_radius = brick_width // 5
-        self.x_speed = self.ball_radius / 5   # Текущая скорость по x
-        self.y_speed = self.ball_radius / -5  # Текущая скорость по y
+        self.x_speed = self.ball_radius / 5
+        self.y_speed = self.ball_radius / -5
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (self.ball_x, self.ball_y), self.ball_radius)
     def update(self):
@@ -405,24 +415,24 @@ class Surprises():
     def draw(self, screen):
         if self.tipe == 0:
             self.surp_width = brick_height // 4
-            pygame.draw.circle(screen, lightRED, (self.x, self.y), self.surp_width) #доп. жизнь
+            pygame.draw.circle(screen, lightRED, (self.x, self.y), self.surp_width)
         elif self.tipe == 1:
             self.surp_width = brick_width
-            pygame.draw.rect(screen, lightBLUE, (self.x, self.y, self.surp_width, 5)) #расширяет биту
+            pygame.draw.rect(screen, lightBLUE, (self.x, self.y, self.surp_width, 5))
         elif self.tipe == 2:
             self.surp_width = brick_width // 4
-            pygame.draw.rect(screen, BLUE, (self.x, self.y, self.surp_width, 5)) #сужает биту
+            pygame.draw.rect(screen, BLUE, (self.x, self.y, self.surp_width, 5))
     def update(self):
         self.y += brick_height // 30 + 1
 
 class TextObject:
-    def __init__(self, x, y, text_func, color, font_name, font_size): #, NameEnter = False):
+    def __init__(self, x, y, text_func, color, font_name, font_size):
         self.pos = (x, y)
         self.text_func = text_func
         self.color = color
         self.font = pygame.font.SysFont(font_name, font_size)
         self.bounds = self.get_surface(text_func())
-    def draw(self, surface): #, centralized = False
+    def draw(self, surface):
         text_surface, self.bounds = self.get_surface(self.text_func())
         pos = self.pos
         surface.blit(text_surface, pos)
