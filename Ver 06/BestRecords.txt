@@ -1,6 +1,6 @@
 MythLegend	280
 TwoHndrdFive	205
-xxRKNDxx	140
+НовыйРек	25
 TestSvnteen	17
 TestSixteen	16
 BeatMe	10

@@ -156,8 +156,14 @@ class Game():
                                       GREEN,
                                       'Arial',
                                       brick_height)
-        self.input_label = TextObject(WIDTH // 2 - int(brick_width * 4),
+        self.congrat_label = TextObject(WIDTH // 2 - int(brick_width * 4),
                                       HEIGHT * 11 // 18,
+                                      lambda: f'Поздравляем, Вы попали в тройку лидеров!',
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+        self.input_label = TextObject(WIDTH // 2 - int(brick_width * 4),
+                                      HEIGHT * 2 // 3,
                                       lambda: f'Введите Ваше имя, и нажмите ENTER: {self.input_name}',
                                       GREEN,
                                       'Arial',
@@ -176,6 +182,7 @@ class Game():
                 player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
                 if len(player_list) < 3 or self.scores > int(player_list[2][-1][:-1]):
                     self.need_input = True
+                    self.objects.append(self.congrat_label)
                     self.objects.append(self.input_label)
                 else: self.records_show()
     def records_show(self):
@@ -214,6 +221,7 @@ class Game():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     need_input = False
+                    self.objects.remove(self.congrat_label)
                     self.objects.remove(self.input_label)
                     open("BestRecords.txt", "a").write(self.input_name + chr(9) + str(self.scores) + chr(10))
                     player_list = [i.split(chr(9)) for i in open("BestRecords.txt", "r")]
