@@ -252,6 +252,7 @@ class Game():
                     elif event.key == pygame.K_UP and Size_ID < len(Screen_Sizes) - 1: Size_ID += 1
                     self.ChangeScreenSize()
                 elif event.key == pygame.K_SPACE:
+                    if self.ball.attached: self.sound_effects['sbita'].play()
                     self.ball.attached = self.screennotchanged = False
                     if self.tutorial_label1 in self.objects: self.objects.remove(self.tutorial_label1)
                     if self.tutorial_label2 in self.objects: self.objects.remove(self.tutorial_label2)
