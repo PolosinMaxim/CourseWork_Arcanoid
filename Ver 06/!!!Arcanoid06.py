@@ -334,13 +334,13 @@ class Game():
                 result = True
             if result:
                 self.scores += 1
-                self.sound_effects['sbrick'].play()
                 if brick.tipe == 0:
                     self.objects.remove(brick)
                     self.bricks.remove(brick)
                     self.create_surprise(self.ball.ball_x, self.ball.ball_y)
                 else: brick.tipe -= 1
                 if len(self.bricks) == 0: self.newlevel()
+                else: self.sound_effects['sbrick'].play()
     def check_surprises(self):
         for surp in self.surprises:
             if surp.y >= self.bita.bita_y and surp.y < self.bita.bita_y + self.bita.bita_height and surp.x <= self.bita.bita_x + self.bita.bita_width and surp.x + surp.surp_width >= self.bita.bita_x: #surp.x >= self.bita.bita_x and surp.x =< self.bita.bita_x + self.bita.bita_width:
