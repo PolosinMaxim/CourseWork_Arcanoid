@@ -131,19 +131,26 @@ class Game():
                                       brick_height)
         self.objects.append(self.level_label)
         self.tutorial_label1 = TextObject(WIDTH // 2 - int(brick_width * 5.5),
-                                      HEIGHT * 11 // 18,
+                                      HEIGHT * 21 // 36, #10-18 20-36
                                       lambda: f'Биту двигать стрелками ВЛЕВО и ВПРАВО; нажмите ПРОБЕЛ для начала',
                                       GREEN,
                                       'Arial',
                                       brick_height)
         self.tutorial_label2 = TextObject(WIDTH // 2 - int(brick_width * 4.5),
-                                      HEIGHT * 2 // 3,
+                                      HEIGHT * 23 // 36,
+                                      lambda: f'Во время игры можно поставить её на ПАУЗУ клавишей ESC',
+                                      GREEN,
+                                      'Arial',
+                                      brick_height)
+        self.tutorial_label3 = TextObject(WIDTH // 2 - int(brick_width * 4.5),
+                                      HEIGHT * 25 // 36,
                                       lambda: f'Пока, можно менять размер экрана клавишами ВВЕРХ и ВНИЗ',
                                       GREEN,
                                       'Arial',
                                       brick_height)
         self.objects.append(self.tutorial_label1)
         self.objects.append(self.tutorial_label2)
+        self.objects.append(self.tutorial_label3)
         self.gameover_label = TextObject(WIDTH // 2 - brick_width,
                                       brick_height * 2,
                                       lambda: f'ИГРА ОКОНЧЕНА',
@@ -256,6 +263,7 @@ class Game():
                     self.ball.attached = self.screennotchanged = False
                     if self.tutorial_label1 in self.objects: self.objects.remove(self.tutorial_label1)
                     if self.tutorial_label2 in self.objects: self.objects.remove(self.tutorial_label2)
+                    if self.tutorial_label3 in self.objects: self.objects.remove(self.tutorial_label3)
                     if self.paused:
                         self.paused = False
                         self.objects.remove(self.pause_label)
@@ -334,13 +342,13 @@ class Game():
                 result = True
             if result:
                 self.scores += 1
+                self.sound_effects['sbrick'].play()
                 if brick.tipe == 0:
                     self.objects.remove(brick)
                     self.bricks.remove(brick)
                     self.create_surprise(self.ball.ball_x, self.ball.ball_y)
                 else: brick.tipe -= 1
                 if len(self.bricks) == 0: self.newlevel()
-                else: self.sound_effects['sbrick'].play()
     def check_surprises(self):
         for surp in self.surprises:
             if surp.y >= self.bita.bita_y and surp.y < self.bita.bita_y + self.bita.bita_height and surp.x <= self.bita.bita_x + self.bita.bita_width and surp.x + surp.surp_width >= self.bita.bita_x: #surp.x >= self.bita.bita_x and surp.x =< self.bita.bita_x + self.bita.bita_width:
