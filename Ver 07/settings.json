@@ -1,15 +1,6 @@
 {
-    "kwarg1": "value_1",
-"xs": 640,
-"ys": 480,
-    "kwarg2": "value_2",
-    "kwarg3": "value_3",
-	"records": {
-		
-		"BeatMe": 16,
-		"max": 1
-	},
-    "levels": {
+    
+	"levels": {
 		"for journalists": [
 			[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]
 		],
